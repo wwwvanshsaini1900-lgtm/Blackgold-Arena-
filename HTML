@@ -1,0 +1,381 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BLACKGOLD ARENA</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#090909;color:#f5f5f5;font-family:Arial,sans-serif}
+header{padding:20px;background:#111;border-bottom:1px solid #b68b27}
+h1{color:#e5b83b;margin:0;font-size:24px}
+h2{color:#e5b83b}
+header p{color:#aaa;margin:6px 0 0;font-size:12px}
+nav{display:flex;gap:7px;padding:12px;overflow-x:auto;background:#151515}
+button{background:#c99b2d;color:#111;border:0;padding:11px 15px;border-radius:7px;font-weight:bold;cursor:pointer}
+nav button{white-space:nowrap}
+button.secondary{background:#292929;color:#eee;border:1px solid #555}
+main{padding:16px;max-width:800px;margin:auto}
+.card{background:#171717;border:1px solid #393126;border-radius:12px;padding:16px;margin:13px 0}
+input,textarea,select{width:100%;padding:12px;margin:7px 0 12px;background:#101010;color:white;border:1px solid #555;border-radius:7px}
+label{color:#d9b75d;font-size:13px}
+small,.muted{color:#aaa}
+.gold{color:#e5b83b}
+.hidden{display:none!important}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1}
+button:disabled{opacity:.5}
+#message{color:#e5b83b;padding:10px}
+</style>
+</head>
+<body>
+
+<header>
+<h1>BLACKGOLD ARENA</h1>
+<p>FREE FIRE ESPORTS • COMPETE • CONQUER</p>
+</header>
+
+<section id="auth" class="card" style="margin:16px">
+<h2>Welcome, Player</h2>
+<p class="muted">Enter the arena and build your legacy.</p>
+<label>Email</label>
+<input id="email" type="email" placeholder="Your email">
+<label>Password</label>
+<input id="password" type="password" placeholder="Password">
+<label>Player name (for registration)</label>
+<input id="playerName" placeholder="Your gaming name">
+<div class="row">
+<button id="register">Create account</button>
+<button id="login" class="secondary">Login</button>
+</div>
+</section>
+
+<section id="app" class="hidden">
+<nav id="nav">
+<button data-page="home">Home</button>
+<button data-page="teams">Teams</button>
+<button data-page="tournaments">Tournaments</button>
+<button data-page="profile">Profile</button>
+</nav>
+
+<main>
+<div id="message"></div>
+
+<section id="home" class="page">
+<div class="card">
+<h2>WELCOME TO THE ARENA</h2>
+<p>Find your squad. Join tournaments. Become a champion.</p>
+<button data-go="tournaments">Explore tournaments</button>
+</div>
+<div class="card">
+<h2>YOUR ARENA</h2>
+<p class="muted">Free Fire tournaments and teams, all in one place.</p>
+</div>
+</section>
+
+<section id="teams" class="page hidden">
+<h2>TEAMS</h2>
+<div class="card">
+<h3>Create your team</h3>
+<input id="teamName" placeholder="Team name">
+<textarea id="teamDescription" placeholder="Team description"></textarea>
+<button id="createTeam">Create team</button>
+</div>
+<h3 class="gold">Find teams</h3>
+<div id="teamList">Loading teams...</div>
+</section>
+
+<section id="tournaments" class="page hidden">
+<h2>TOURNAMENTS</h2>
+<div id="tournamentList">Loading tournaments...</div>
+</section>
+
+<section id="profile" class="page hidden">
+<h2>PLAYER PROFILE</h2>
+<div class="card">
+<p id="profileName"></p>
+<p id="profileEmail"></p>
+<p id="profileUid" class="muted"></p>
+<button id="logout" class="secondary">Logout</button>
+</div>
+</section>
+
+<section id="admin" class="page hidden">
+<h2>ADMIN DASHBOARD</h2>
+<div class="card">
+<h3>Create tournament</h3>
+<label>Tournament name</label>
+<input id="newTournamentName" placeholder="Free Fire Squad Cup">
+<label>Mode</label>
+<select id="newTournamentMode">
+<option>Squad</option>
+<option>Duo</option>
+<option>Solo</option>
+</select>
+<label>Prize information</label>
+<input id="newTournamentPrize" placeholder="Prize details">
+<label>Maximum teams</label>
+<input id="newTournamentLimit" type="number" min="1" placeholder="12">
+<label>Date and time</label>
+<input id="newTournamentDate" type="datetime-local">
+<button id="createTournament">Publish tournament</button>
+</div>
+<div class="card">
+<h3>Manage tournaments</h3>
+<div id="adminTournamentList">Loading...</div>
+</div>
+<div class="card">
+<h3>Registrations</h3>
+<div id="registrationList">Loading...</div>
+</div>
+</section>
+</main>
+</section>
+
+<script type="module">
+import { initializeApp } from
+"https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
+
+import {
+getAuth, createUserWithEmailAndPassword,
+signInWithEmailAndPassword, signOut,
+onAuthStateChanged, updateProfile
+} from "https://www.gstatic.com/firebasejs/13.2.0/firebase-auth.js";
+
+import {
+getFirestore, doc, setDoc, getDoc,
+collection, addDoc, getDocs, query, where,
+serverTimestamp
+} from "https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyDyQtawrzhXjLSh-jtC58G8q5fKCvFhxnE",
+authDomain: "blackgold-arena-3a0e3.firebaseapp.com",
+projectId: "blackgold-arena-3a0e3",
+storageBucket: "blackgold-arena-3a0e3.firebasestorage.app",
+messagingSenderId: "423004899381",
+appId: "1:423004899381:web:68b557f84710ef8112497c"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const $ = id => document.getElementById(id);
+
+let currentUser = null;
+let isAdmin = false;
+
+function message(text){
+$("message").textContent = text;
+}
+
+function safe(value){
+return String(value ?? "").replace(/[&<>"']/g, c => ({
+"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+}[c]));
+}
+
+function showPage(page){
+document.querySelectorAll(".page").forEach(el=>el.classList.add("hidden"));
+$(page)?.classList.remove("hidden");
+}
+
+document.querySelectorAll("[data-page]").forEach(btn=>{
+btn.addEventListener("click",()=>showPage(btn.dataset.page));
+});
+
+document.querySelectorAll("[data-go]").forEach(btn=>{
+btn.addEventListener("click",()=>showPage(btn.dataset.go));
+});
+
+$("register").onclick = async()=>{
+try{
+const email=$("email").value.trim();
+const password=$("password").value;
+const name=$("playerName").value.trim();
+if(!name) return message("Enter your player name.");
+const result=await createUserWithEmailAndPassword(auth,email,password);
+await updateProfile(result.user,{displayName:name});
+await setDoc(doc(db,"users",result.user.uid),{
+name,email,createdAt:serverTimestamp()
+});
+message("Account created successfully!");
+}catch(e){message(e.message);}
+};
+
+$("login").onclick = async()=>{
+try{
+await signInWithEmailAndPassword(
+auth,$("email").value.trim(),$("password").value
+);
+message("Login successful!");
+}catch(e){message(e.message);}
+};
+
+$("logout").onclick=()=>signOut(auth);
+
+onAuthStateChanged(auth,async user=>{
+currentUser=user;
+$("auth").classList.toggle("hidden",!!user);
+$("app").classList.toggle("hidden",!user);
+
+if(!user){
+isAdmin=false;
+document.getElementById("adminNav")?.remove();
+return;
+}
+
+$("profileName").textContent="Player: "+(user.displayName||"Player");
+$("profileEmail").textContent="Email: "+user.email;
+$("profileUid").textContent="Account ID: "+user.uid;
+
+try{
+const snap=await getDoc(doc(db,"admins",user.uid));
+isAdmin=snap.exists() && snap.data().role==="admin";
+
+if(isAdmin && !document.getElementById("adminNav")){
+const btn=document.createElement("button");
+btn.id="adminNav";
+btn.textContent="Admin";
+btn.dataset.page="admin";
+$("nav").appendChild(btn);
+btn.onclick=()=>showPage("admin");
+}
+if(!isAdmin) document.getElementById("adminNav")?.remove();
+
+}catch(error){
+isAdmin=false;
+message("Admin check failed: "+error.message);
+}
+
+showPage("home");
+loadTeams();
+loadTournaments();
+});
+
+async function loadTeams(){
+try{
+const result=await getDocs(collection(db,"teams"));
+$("teamList").innerHTML="";
+if(result.empty){
+$("teamList").textContent="No teams yet. Create the first team!";
+return;
+}
+result.forEach(item=>{
+const t=item.data();
+const card=document.createElement("div");
+card.className="card";
+card.innerHTML="<h3>"+safe(t.name)+"</h3><p>"+safe(t.description)+"</p><small>Game: Free Fire</small>";
+$("teamList").appendChild(card);
+});
+}catch(e){$("teamList").textContent=e.message;}
+}
+
+$("createTeam").onclick=async()=>{
+try{
+const name=$("teamName").value.trim();
+const description=$("teamDescription").value.trim();
+if(!name) return message("Enter a team name.");
+await addDoc(collection(db,"teams"),{
+name,description,game:"Free Fire",
+ownerId:currentUser.uid,
+createdAt:serverTimestamp()
+});
+$("teamName").value="";
+$("teamDescription").value="";
+message("Team created!");
+loadTeams();
+}catch(e){message("Team error: "+e.message);}
+};
+
+async function loadTournaments(){
+try{
+const result=await getDocs(collection(db,"tournaments"));
+$("tournamentList").innerHTML="";
+if(result.empty){
+$("tournamentList").textContent="No tournaments published yet.";
+return;
+}
+result.forEach(item=>{
+const t=item.data();
+const card=document.createElement("div");
+card.className="card";
+card.innerHTML=
+"<h3>"+safe(t.name)+"</h3>"+
+"<p>Mode: "+safe(t.mode)+"</p>"+
+"<p>Prize: "+safe(t.prize)+"</p>"+
+"<p>Maximum teams: "+safe(t.limit)+"</p>"+
+"<p>Date: "+safe(t.date)+"</p>"+
+"<button data-register='"+safe(item.id)+"'>Register team</button>";
+$("tournamentList").appendChild(card);
+});
+}catch(e){$("tournamentList").textContent=e.message;}
+}
+
+$("tournamentList").addEventListener("click",async e=>{
+const id=e.target.dataset.register;
+if(!id) return;
+try{
+await addDoc(collection(db,"registrations"),{
+tournamentId:id,
+userId:currentUser.uid,
+email:currentUser.email,
+createdAt:serverTimestamp()
+});
+message("Tournament registration submitted!");
+}catch(error){message("Registration error: "+error.message);}
+});
+
+$("createTournament").onclick=async()=>{
+if(!isAdmin) return message("Admin access required.");
+try{
+const name=$("newTournamentName").value.trim();
+if(!name) return message("Enter tournament name.");
+await addDoc(collection(db,"tournaments"),{
+name,
+mode:$("newTournamentMode").value,
+prize:$("newTournamentPrize").value.trim(),
+limit:Number($("newTournamentLimit").value)||12,
+date:$("newTournamentDate").value,
+createdAt:serverTimestamp(),
+createdBy:currentUser.uid
+});
+message("Tournament published!");
+$("newTournamentName").value="";
+loadTournaments();
+loadAdminData();
+}catch(e){message("Publish error: "+e.message);}
+};
+
+async function loadAdminData(){
+if(!isAdmin) return;
+try{
+const tournaments=await getDocs(collection(db,"tournaments"));
+$("adminTournamentList").innerHTML="";
+tournaments.forEach(item=>{
+const t=item.data();
+const p=document.createElement("p");
+p.textContent=t.name+" — "+t.mode;
+$("adminTournamentList").appendChild(p);
+});
+
+const registrations=await getDocs(collection(db,"registrations"));
+$("registrationList").innerHTML="";
+if(registrations.empty){
+$("registrationList").textContent="No registrations yet.";
+}else{
+registrations.forEach(item=>{
+const r=item.data();
+const p=document.createElement("p");
+p.textContent="Tournament: "+r.tournamentId+" | Player: "+r.email;
+$("registrationList").appendChild(p);
+});
+}
+}catch(e){message("Admin data error: "+e.message);}
+}
+
+document.getElementById("adminNav")?.addEventListener("click",loadAdminData);
+</script>
+</body>
+</html>
