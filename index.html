@@ -222,7 +222,8 @@ onAuthStateChanged(auth, async user => {
         }
       }
     } catch (error) {
-      console.error("Admin check failed:", error);
+  alert("Admin check error: " + error.code + " | " + error.message);
+  console.error("Admin check failed:", error);
     }
   } else {
     document.getElementById("adminNav")?.remove();
