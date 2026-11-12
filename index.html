@@ -213,7 +213,11 @@ onAuthStateChanged(auth, async user => {
      alert("Project: " + db.app.options.projectId +
 "\nDocument path: " + adminSnap.ref.path +
 "\nUID: " + user.uid);
-     alert("Admin document found: " + adminSnap.exists() + " | Role: " + (adminSnap.data()?.role || "missing"));
+     alert("DIAGNOSTIC: " + JSON.stringify({
+  exists: adminSnap.exists(),
+  data: adminSnap.data(),
+  path: adminSnap.ref.path
+}));
 
       if (
         adminSnap.exists() &&
