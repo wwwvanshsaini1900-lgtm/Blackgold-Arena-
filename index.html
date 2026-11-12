@@ -211,9 +211,15 @@ onAuthStateChanged(auth, async user => {
     $("profileEmail").textContent = user.email;
 
     try {
-      const adminSnap = await getDoc(
-        doc(db, "admins", user.uid)
-      );
+      const adminRef = doc(db, "admins", user.uid);
+const adminSnap = await getDoc(adminRef);
+
+const allAdmins = await getDocs(collection(db, "admins"));
+
+alert(
+  "Admin document exists: " + adminSnap.exists() +
+  "\nDocuments in admins collection: " + allAdmins.size
+);
      alert(JSON.stringify({
   exists: adminSnap.exists(),
   data: adminSnap.data(),
