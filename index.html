@@ -230,9 +230,21 @@ $("profileName").textContent="Player: "+(user.displayName||"Player");
 $("profileEmail").textContent="Email: "+user.email;
 $("profileUid").textContent="Account ID: "+user.uid;
 
-try{
-const snap=await getDoc(doc(db,"admins",user.uid));
-isAdmin=snap.exists() && snap.data().role==="admin";
+try {
+  const snap = await getDoc(doc(db, "admins", user.uid));
+
+  alert(
+    "Admin document exists: " + snap.exists() +
+    "\nRole: " + (snap.exists() ? snap.data().role : "missing") +
+    "\nUID: " + user.uid
+  );
+
+  isAdmin = snap.exists() && snap.data().role === "admin";
+
+} catch (error) {
+  alert("Admin check error: " + error.message);
+  isAdmin = false;
+}
 
 if(isAdmin && !document.getElementById("adminNav")){
 const btn=document.createElement("button");
