@@ -200,7 +200,12 @@ onAuthStateChanged(auth, async user => {
 
   if (user) {
     const name = user.displayName || user.email;
-   alert("Logged-in UID: " + user.uid);
+   alert(
+  "Email: " + user.email +
+  "\nUID: " + user.uid +
+  "\nProject: " + db.app.options.projectId +
+  "\nPath: admins/" + user.uid
+);
     $("welcome").textContent = "Welcome, " + name;
     $("profileName").textContent = "Player: " + name;
     $("profileEmail").textContent = user.email;
