@@ -205,6 +205,9 @@ onAuthStateChanged(auth, async user => {
       const adminSnap = await getDoc(
         doc(db, "admins", user.uid)
       );
+     alert("Project: " + db.app.options.projectId +
+"\nDocument path: " + adminSnap.ref.path +
+"\nUID: " + user.uid);
      alert("Admin document found: " + adminSnap.exists() + " | Role: " + (adminSnap.data()?.role || "missing"));
 
       if (
