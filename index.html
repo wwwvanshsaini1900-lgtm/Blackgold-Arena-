@@ -188,17 +188,45 @@ $("authBtn").onclick = async () => {
  $("authBtn").disabled=false;
 };
 
-onAuthStateChanged(auth,user=>{
- $("auth").classList.toggle("hidden",!!user);
- $("app").classList.toggle("hidden",!user);
- $("logout").classList.toggle("hidden",!user);
- if(user){
-  const name=user.displayName || user.email;
-  $("welcome").textContent="Welcome, "+name;
-  $("profileName").textContent="Player: "+name;
-  $("profileEmail").textContent=user.email;
- }
+
+onAuthStateChanged(auth, async user => {
+  $("auth").classList.toggle("hidden", !!user);
+  $("app").classList.toggle("hidden", !user);
+  $("logout").classList.toggle("hidden", !user);
+
+  if (user) {
+    const name = user.displayName || user.email;
+    $("welcome").textContent = "Welcome, " + name;
+    $("profileName").textContent = "Player: " + name;
+    $("profileEmail").textContent = user.email;
+
+    try {
+      const adminSnap = await getDoc(
+        doc(db, "admins", user.uid)
+      );
+
+      if (
+        adminSnap.exists() &&
+        adminSnap.data().role === "admin"
+      ) {
+        const nav = document.querySelector("nav");
+
+        if (!document.getElementById("adminNav")) {
+          const btn = document.createElement("button");
+          btn.id = "adminNav";
+          btn.textContent = "Admin";
+          btn.dataset.page = "admin";
+          nav.appendChild(btn);
+        }
+      }
+    } catch (error) {
+      console.error("Admin check failed:", error);
+    }
+  } else {
+    document.getElementById("adminNav")?.remove();
+  }
 });
+ 
 
 $("logout").onclick=()=>signOut(auth);
 
